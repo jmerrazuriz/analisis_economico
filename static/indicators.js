@@ -206,7 +206,7 @@ window.SECTIONS = [
         key: "tcr",
         name: "Tipo de cambio real",
         series: [{ id: "F073.TCR.IND.199101.M", label: "Tipo de cambio real" }],
-        kind: "line", decimals: 1, unit: "índice, promedio 1986 = 100", change: "pct",
+        kind: "line", decimals: 2, unit: "índice, promedio 1986 = 100", change: "pct",
       },
     ],
   },
