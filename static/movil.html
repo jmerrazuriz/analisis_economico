@@ -18,15 +18,17 @@
   <link rel="stylesheet" href="mobile.css">
 </head>
 <body data-version="movil">
-  <header class="appbar">
-    <div class="appbar-title">
-      <span class="brand-name">Panel macro Chile</span>
-      <span class="appbar-status" id="status" role="status">Cargando datos…</span>
-    </div>
-    <button class="btn btn-small" id="refresh" type="button">Actualizar</button>
-  </header>
+  <div class="topbar" id="topbar">
+    <header class="appbar">
+      <div class="appbar-title">
+        <span class="brand-name">Panel macro Chile</span>
+        <span class="appbar-status" id="status" role="status">Cargando datos…</span>
+      </div>
+      <button class="btn btn-small" id="refresh" type="button">Actualizar</button>
+    </header>
 
-  <section class="strip" id="strip" aria-label="Valores del día"></section>
+    <section class="strip" id="strip" aria-label="Valores del día"></section>
+  </div>
 
   <main class="main">
     <div class="toolbar" id="chart-controls">

@@ -124,3 +124,8 @@
   .form-row { grid-template-columns: 1fr; }
   .section-head h1 { font-size: 24px; }
 }
+
+/* La pizarra queda fija arriba al bajar por la página (en ventanas angostas ocuparía demasiado). */
+@media (min-width: 861px) {
+  .strip { position: sticky; top: 0; z-index: 15; }
+}

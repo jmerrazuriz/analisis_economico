@@ -2,10 +2,10 @@
 
 body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 
+/* Barra superior y pizarra quedan fijas juntas arriba de la pantalla. */
+.topbar { position: sticky; top: 0; z-index: 20; }
+
 .appbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -50,7 +50,7 @@ body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 
 .cards { display: grid; gap: 12px; padding: 12px 12px 20px; }
 
-.card { display: flex; flex-direction: column; scroll-margin-top: 72px; }
+.card { display: flex; flex-direction: column; scroll-margin-top: calc(var(--sticky-offset, 0px) + 12px); }
 .card-side { order: -1; padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
 .card-main { padding: 14px 16px 10px; }
 .card-head h2 { font-size: 16px; }

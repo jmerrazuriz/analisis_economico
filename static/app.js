@@ -122,8 +122,21 @@
       text = formatValue(Math.abs(diff), spec);
     }
     const zero = cur.v === prev.v;
-    const arrow = zero ? "=" : diff > 0 ? "▲" : "▼";
-    return { zero, text: `${arrow} ${text}` };
+    return { zero, diff, arrow: zero ? "=" : diff > 0 ? "▲" : "▼", amount: text };
+  }
+
+  // Flecha verde si el cambio favorece a la economía chilena y roja si la perjudica (según goodUp).
+  function changeNode(change, goodUp) {
+    const node = el("span", "delta");
+    const arrow = el("span", "delta-arrow", change.arrow);
+    node.append(arrow, document.createTextNode(` ${change.amount}`));
+    if (!change.zero && goodUp != null) {
+      const good = (change.diff > 0) === goodUp;
+      arrow.classList.add(good ? "is-good" : "is-bad");
+      node.title = good ? "Cambio favorable para la economía chilena" : "Cambio desfavorable para la economía chilena";
+      node.appendChild(el("span", "sr-only", good ? " (favorable)" : " (desfavorable)"));
+    }
+    return node;
   }
 
   function unchangedSince(points) {
@@ -400,7 +413,7 @@
         if (change && change.zero) {
           meta.appendChild(el("span", null, `Sin cambio desde ${dateLabel(unchangedSince(points).d, freq)}`));
         } else {
-          if (change) meta.appendChild(el("span", null, change.text));
+          if (change) meta.appendChild(changeNode(change, quote.goodUp));
           meta.appendChild(el("span", null, dateLabel(cur.d, freq)));
         }
         button.appendChild(meta);
@@ -606,7 +619,9 @@
 
   function addStat(list, label, value, detail) {
     const row = el("div");
-    const dd = el("dd", null, value);
+    const dd = el("dd");
+    if (typeof value === "string") dd.textContent = value;
+    else dd.appendChild(value);
     if (detail) dd.appendChild(el("small", null, detail));
     row.append(el("dt", null, label), dd);
     list.appendChild(row);
@@ -633,13 +648,13 @@
     const prevChange = describeChange(cur, prev, item);
     if (prevChange) {
       addStat(stats, "Respecto al dato anterior",
-        prevChange.zero ? "Sin cambio" : prevChange.text,
+        prevChange.zero ? "Sin cambio" : changeNode(prevChange, item.goodUp),
         prevChange.zero ? `desde ${dateLabel(unchangedSince(main.all).d, freq)}` : `${formatValue(prev.v, item)} en ${dateLabel(prev.d, freq)}`);
     }
     if (freq !== "A") {
       const yearAgo = Plot.atOrBefore(main.all, toTime(shiftYears(cur.d, -1)), TOLERANCE[freq]);
       const yearChange = describeChange(cur, yearAgo, item);
-      if (yearChange) addStat(stats, "Respecto a un año atrás", yearChange.text, `${formatValue(yearAgo.v, item)} en ${dateLabel(yearAgo.d, freq)}`);
+      if (yearChange) addStat(stats, "Respecto a un año atrás", changeNode(yearChange, item.goodUp), `${formatValue(yearAgo.v, item)} en ${dateLabel(yearAgo.d, freq)}`);
     }
     if (main.points.length > 1) {
       let low = main.points[0];
@@ -785,6 +800,25 @@
     });
   }
 
+  // La pizarra queda fija arriba: al bajar se vuelve semitransparente y arriba del todo se ve sólida.
+  function bindStickyStrip() {
+    const strip = $("strip");
+    const sticky = $("topbar") || strip;
+    const onScroll = () => strip.classList.toggle("is-scrolled", window.scrollY > 8);
+    // Al saltar a una tarjeta, se descuenta la altura de lo que queda fijo arriba.
+    const measure = () => {
+      const height = getComputedStyle(sticky).position === "sticky" ? sticky.offsetHeight : 0;
+      document.documentElement.style.setProperty("--sticky-offset", `${height}px`);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    // Se vuelve a medir justo antes de saltar a una tarjeta desde la pizarra (fase de captura).
+    strip.addEventListener("click", measure, true);
+    new ResizeObserver(measure).observe(sticky);
+    onScroll();
+    measure();
+  }
+
   async function init() {
     $("refresh").addEventListener("click", refresh);
     window.addEventListener("hashchange", () => {
@@ -799,6 +833,7 @@
       if (e.key === "Escape" && state.zoom && !e.target.closest(".plot")) setZoom(null);
     });
     bindVersionSwitch();
+    bindStickyStrip();
 
     renderNav();
     renderRanges();
