@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Mismo motivo que el favicon, a fondo completo: iOS y Android aplican su propia máscara.
+       La línea queda dentro de la zona segura (círculo de 80%) para íconos adaptables. -->
+  <rect width="512" height="512" fill="#0f2a4a"/>
+  <path d="M112 352 L208 240 L288 304 L400 160" fill="none" stroke="#6da7ec" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
