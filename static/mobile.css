@@ -62,6 +62,23 @@ body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 .side-stats dd { text-align: left; }
 
 .how-toggle { min-height: 36px; }
+
+/* Barra de zoom en cada gráfico: aparece solo cuando hay un período acercado. */
+.card-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-top: 10px;
+  padding: 5px 5px 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--side);
+  font-size: 12.5px;
+}
+.card-zoom-range { font-weight: 600; color: var(--ink); }
+.card-zoom .btn { min-height: 34px; }
 .how { grid-template-columns: 1fr; padding: 14px; }
 .plot { min-height: 200px; }
 .plot-msg { min-height: 200px; }

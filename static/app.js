@@ -360,7 +360,7 @@
       zoom.appendChild(reset);
     } else {
       zoom.appendChild(el("span", "zoom-hint", IS_MOBILE
-        ? "Toca un gráfico para ver sus valores. Arrastra de lado para acercar un período y toca dos veces para volver."
+        ? "Toca un gráfico para ver sus valores. Arrastra de lado para acercar un período; para volver, usa «Quitar zoom» en el gráfico."
         : "Arrastra sobre un gráfico para acercar un período; doble clic para volver."));
     }
   }
@@ -369,6 +369,14 @@
     state.zoom = zoom;
     renderRanges();
     updateCards();
+  }
+
+  // Aplica un cambio y corrige el scroll para que "node" quede en el mismo lugar de la pantalla.
+  function keepInView(node, action) {
+    const before = node.getBoundingClientRect().top;
+    action();
+    const shift = node.getBoundingClientRect().top - before;
+    if (shift) window.scrollBy(0, shift);
   }
 
   /* ---------- pizarra de valores del día ---------- */
@@ -478,13 +486,26 @@
     details.append(el("summary", null, "Ver datos en tabla"), tableWrap);
     details.addEventListener("toggle", () => { if (details.open) fillTable(item); });
 
-    main.append(head, howPanel, legend, plot, details);
+    // En el teléfono cada gráfico tiene su propio botón para quitar el zoom.
+    let zoomBar = null;
+    let zoomText = null;
+    if (IS_MOBILE) {
+      zoomBar = el("div", "card-zoom");
+      zoomBar.hidden = true;
+      zoomText = el("span", "card-zoom-range");
+      const zoomReset = el("button", "btn btn-small", "Quitar zoom");
+      zoomReset.type = "button";
+      zoomReset.addEventListener("click", () => keepInView(card, () => setZoom(null)));
+      zoomBar.append(zoomText, zoomReset);
+    }
+
+    main.append(head, howPanel, legend, ...(zoomBar ? [zoomBar] : []), plot, details);
 
     const side = el("aside", "card-side");
     side.setAttribute("aria-label", `Valor actual de ${item.name}`);
 
     card.append(main, side);
-    state.cards.set(item.key, { plot, side, tableWrap, details });
+    state.cards.set(item.key, { plot, side, tableWrap, details, zoomBar, zoomText });
     return card;
   }
 
@@ -544,6 +565,10 @@
   function fillCard(item, colors) {
     const refs = state.cards.get(item.key);
     if (!refs) return;
+    if (refs.zoomBar) {
+      refs.zoomBar.hidden = !state.zoom;
+      if (state.zoom) refs.zoomText.textContent = `Zoom: ${dateLabel(state.zoom.from, "D")} – ${dateLabel(state.zoom.to, "D")}`;
+    }
     const missing = item.series.map((s) => s.id).filter((id) => !state.raw.has(id));
     if (missing.length) {
       const error = missing.map((id) => state.errors.get(id)).find(Boolean);
@@ -570,8 +595,9 @@
       formatValue: (v) => formatValue(v, item),
       formatDate: (p) => dateLabel(p.d, freq, true),
       formatTime: (t) => dateLabel(isoOf(t), "D"),
-      onZoom: (from, to) => setZoom({ from: isoOf(from), to: isoOf(to) }),
-      onReset: () => { if (state.zoom) setZoom(null); },
+      // keepInView evita que la página salte cuando aparecen o desaparecen las barras de zoom.
+      onZoom: (from, to) => keepInView(refs.plot, () => setZoom({ from: isoOf(from), to: isoOf(to) })),
+      onReset: () => { if (state.zoom) keepInView(refs.plot, () => setZoom(null)); },
     });
 
     fillSide(refs.side, item, full, freq);
