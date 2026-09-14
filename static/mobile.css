@@ -166,10 +166,8 @@ details.data summary { padding: 8px 0; }
 .editor-option { padding: 9px 2px; }
 
 /* Inicio de sesión en el teléfono: una sola columna, campos grandes y sin zoom al escribir */
-.auth-hero { padding: calc(56px + env(safe-area-inset-top)) 20px 22px; }
-.auth-back { top: calc(12px + env(safe-area-inset-top)); left: 10px; }
-.auth-hero-title { font-size: 26px; }
-.auth-hero-text { font-size: 14px; }
+.auth-hero { height: calc(190px + env(safe-area-inset-top)); }
+.auth-back { top: calc(12px + env(safe-area-inset-top)); left: 12px; }
 .auth-panel { padding: 24px 20px calc(32px + env(safe-area-inset-bottom)); }
 .auth-input { height: 48px; font-size: 16px; }
 .auth-input.has-eye { padding-right: 54px; }

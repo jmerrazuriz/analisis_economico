@@ -191,12 +191,12 @@
     const hero = el("section", "auth-hero");
     const back = el("button", "auth-back", "← Volver al panel");
     back.type = "button";
-    hero.append(
-      back,
-      el("p", "auth-eyebrow", "Tu pestaña personalizada"),
-      el("h1", "auth-hero-title", "Bienvenido a Panel macro Chile"),
-      el("p", "auth-hero-text", "Arma una pestaña con los indicadores y monedas que más sigues, incluso los que no aparecen en las otras secciones. Tu cuenta y tus preferencias se guardan solo en este dispositivo."),
-    );
+    // Fotografía decorativa de Santiago de noche, sin texto de bienvenida.
+    const photo = el("img", "auth-hero-img");
+    photo.src = "img/santiago-noche.jpg";
+    photo.alt = "";
+    photo.decoding = "async";
+    hero.append(photo, back);
 
     const panel = el("section", "auth-panel");
     const card = el("div", "auth-card");
