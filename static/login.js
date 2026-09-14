@@ -1,4 +1,4 @@
-/* Pantalla de inicio de sesión, creación de cuenta y contraseña olvidada (cuentas locales).
+/* Pantalla de inicio de sesión y creación de cuenta local.
    En computador es una pantalla dividida; en el teléfono se apila (ver mobile.css). */
 (function () {
   "use strict";
@@ -97,15 +97,9 @@
       submit: "Crear cuenta →",
       busy: "Creando cuenta…",
     },
-    forgot: {
-      title: "¿Olvidaste tu contraseña?",
-      sub: "Las cuentas se guardan solo en este dispositivo, así que la contraseña no se puede recuperar. Puedes eliminar la cuenta de este dispositivo, junto con su pestaña personalizada, y crear una nueva.",
-      submit: "Eliminar cuenta de este dispositivo",
-      confirm: "Sí, eliminar la cuenta y su pestaña",
-    },
   };
 
-  function render(s, notice) {
+  function render(s) {
     const card = s.card;
     const texts = TEXTS[s.mode];
     card.textContent = "";
@@ -118,7 +112,7 @@
 
     const title = el("h2", "auth-title", texts.title);
     title.id = "auth-title";
-    card.append(brand, title, el("p", "auth-sub", notice || texts.sub));
+    card.append(brand, title, el("p", "auth-sub", texts.sub));
 
     const form = el("form", "auth-form");
     form.noValidate = true;
@@ -126,16 +120,14 @@
     if (s.mode === "register") fields.name = field({ label: "Nombre", name: "name", icon: "user", autocomplete: "name" });
     fields.email = field({ label: "Correo electrónico", name: "email", icon: "mail", type: "email", autocomplete: "email" });
     fields.email.input.value = s.email || "";
-    if (s.mode !== "forgot") {
-      fields.password = field({
-        label: "Contraseña",
-        name: "password",
-        icon: "lock",
-        password: true,
-        autocomplete: s.mode === "register" ? "new-password" : "current-password",
-        hint: s.mode === "register" ? `Mínimo ${Accounts.MIN_PASSWORD} caracteres.` : null,
-      });
-    }
+    fields.password = field({
+      label: "Contraseña",
+      name: "password",
+      icon: "lock",
+      password: true,
+      autocomplete: s.mode === "register" ? "new-password" : "current-password",
+      hint: s.mode === "register" ? `Mínimo ${Accounts.MIN_PASSWORD} caracteres.` : null,
+    });
     if (s.mode === "register") {
       fields.confirm = field({ label: "Confirmar contraseña", name: "confirm", icon: "lock", password: true, autocomplete: "new-password" });
     }
@@ -143,7 +135,7 @@
 
     const error = el("p", "auth-error");
     error.setAttribute("role", "alert");
-    const submit = el("button", "auth-submit" + (s.mode === "forgot" ? " is-danger" : ""), texts.submit);
+    const submit = el("button", "auth-submit", texts.submit);
     submit.type = "submit";
     form.append(error, submit);
     card.appendChild(form);
@@ -155,33 +147,15 @@
     };
     const switchRow = el("p", "auth-switch");
     if (s.mode === "login") switchRow.append("¿No tienes cuenta? ", link("Crear cuenta", () => go("register")));
-    else switchRow.append(s.mode === "register" ? "¿Ya tienes cuenta? " : "¿La recordaste? ", link("Iniciar sesión", () => go("login")));
+    else switchRow.append("¿Ya tienes cuenta? ", link("Iniciar sesión", () => go("login")));
     card.appendChild(switchRow);
-    if (s.mode === "login") {
-      const forgotRow = el("p", "auth-switch");
-      forgotRow.appendChild(link("¿Olvidaste tu contraseña?", () => go("forgot")));
-      card.appendChild(forgotRow);
-    }
 
-    let confirmDelete = false;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       error.textContent = "";
       Object.values(fields).forEach((f) => f.input.removeAttribute("aria-invalid"));
       const values = Object.fromEntries(Object.entries(fields).map(([key, f]) => [key, f.input.value]));
       try {
-        if (s.mode === "forgot") {
-          if (!confirmDelete) {
-            confirmDelete = true;
-            submit.textContent = texts.confirm;
-            return;
-          }
-          Accounts.forgetAccount(values.email);
-          s.email = values.email;
-          s.mode = "register";
-          render(s, "Cuenta eliminada de este dispositivo. Ya puedes crear una nueva.");
-          return;
-        }
         if (s.mode === "register" && values.password !== values.confirm) {
           fields.confirm.input.setAttribute("aria-invalid", "true");
           throw new Accounts.AccountError("Las contraseñas no coinciden.");
@@ -197,7 +171,6 @@
       } catch (err) {
         submit.disabled = false;
         submit.textContent = texts.submit;
-        confirmDelete = false;
         error.textContent = err instanceof Accounts.AccountError
           ? err.message
           : "No se pudo completar la operación. Intenta de nuevo.";

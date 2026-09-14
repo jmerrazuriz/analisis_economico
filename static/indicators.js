@@ -301,6 +301,9 @@ window.SECTIONS = [
       { id: "F072.CLP.ARS.N.O.D", group: "Monedas", code: "ARS", name: "Peso argentino", plural: "pesos argentinos", decimals: 2 },
       { id: "F072.CLP.PEN.N.O.D", group: "Monedas", code: "S/", name: "Sol peruano", plural: "soles", decimals: 2 },
       { id: "F072.CLP.MXN.N.O.D", group: "Monedas", code: "MXN", name: "Peso mexicano", plural: "pesos mexicanos", decimals: 2 },
+      { id: "F072.CLP.UYU.N.O.D", group: "Monedas", code: "UYU", name: "Peso uruguayo", plural: "pesos uruguayos", decimals: 2 },
+      // El BCCh publica pesos por guaraní redondeado a $0,16; se calcula con el dólar observado y la paridad (guaraníes por dólar).
+      { id: "F072.CLP.PYG.N.O.D", cross: { dollar: "F073.TCO.PRE.Z.D", parity: "F072.PYG.USD.N.O.D" }, group: "Monedas", code: "PYG", name: "Guaraní paraguayo", plural: "guaraníes", decimals: 0 },
     ],
   },
   {

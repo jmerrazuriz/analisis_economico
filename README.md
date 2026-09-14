@@ -18,7 +18,7 @@ En un teléfono, `index.html` abre automáticamente la versión móvil. Cada ver
 | Precios e inflación | IPC en 12 meses e IPC sin volátiles (con meta de 3%), IPC mensual |
 | Sector externo y tipo de cambio | Balanza comercial, exportaciones e importaciones, cuenta corriente, reservas internacionales, tipo de cambio nominal y real |
 | Mercado laboral y monetario | Tasa de desocupación, personas ocupadas, M1/M2/M3, colocaciones |
-| Convertir | Monto en UF, UTM, dólar, euro, libra, yuan, yen, real, peso argentino, sol o peso mexicano ↔ pesos chilenos, en la fecha que elijas |
+| Convertir | Monto en UF, UTM, dólar, euro, libra, yuan, yen, real, peso argentino, sol, peso mexicano, peso uruguayo o guaraní paraguayo ↔ pesos chilenos, en la fecha que elijas |
 | Personalizado | La pestaña de cada usuario: indicadores del panel y series del catálogo ampliado |
 
 ## Cuentas y sección Personalizado
@@ -26,7 +26,7 @@ En un teléfono, `index.html` abre automáticamente la versión móvil. Cada ver
 - El panel es público. La cuenta solo se necesita para la sección **Personalizado**.
 - Cada persona crea su cuenta en su propio dispositivo: no hay administrador ni servidor de cuentas. La cuenta y la pestaña quedan guardadas solo en ese navegador (no se sincronizan entre dispositivos).
 - La contraseña no se guarda: se guarda un hash PBKDF2-SHA256 con sal aleatoria. Esto separa las pestañas de quienes comparten un dispositivo, pero no protege frente a alguien con acceso técnico al navegador.
-- Una contraseña olvidada no se puede recuperar: desde «¿Olvidaste tu contraseña?» se elimina la cuenta de ese dispositivo y se puede crear otra.
+- Una contraseña olvidada no se puede recuperar.
 - Con la sesión iniciada, «Mi cuenta» permite cambiar la contraseña o eliminar la cuenta.
 - En Personalizado se puede elegir cualquier indicador del panel (aunque ya esté en otra sección) o series del **catálogo ampliado**: 59 monedas, materias primas, bolsas, tasas de interés, crédito bancario, expectativas, IMACEC por sector, IPC por división y mercado laboral. Las series mensuales y trimestrales se pueden ver como valor o como variación anual.
 

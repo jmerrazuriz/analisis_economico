@@ -137,10 +137,34 @@
 
     container.append(card, others);
 
+    // Algunas monedas se publican muy redondeadas (el guaraní vale unos $0,16): se calculan
+    // dividiendo el dólar observado por la paridad de la moneda frente al dólar.
+    const crossCache = new Map();
+    function unitPoints(unit) {
+      if (!unit.cross) return ctx.points(unit.id);
+      const dollar = ctx.points(unit.cross.dollar);
+      const parity = ctx.points(unit.cross.parity);
+      if (!dollar || !parity) return null;
+      const cached = crossCache.get(unit.id);
+      if (cached && cached.dollar === dollar && cached.parity === parity) return cached.points;
+      const points = [];
+      parity.forEach((p) => {
+        const usd = ctx.atOrBefore(dollar, p.t, 4 * DAY);
+        if (usd && p.v) points.push({ d: p.d, t: p.t, v: usd.v / p.v });
+      });
+      crossCache.set(unit.id, { dollar, parity, points });
+      return points;
+    }
+
+    function unitError(unit) {
+      const ids = unit.cross ? [unit.cross.dollar, unit.cross.parity] : [unit.id];
+      return ids.map((id) => ctx.error(id)).find(Boolean);
+    }
+
     function rateFor(unit) {
-      const points = ctx.points(unit.id);
+      const points = unitPoints(unit);
       if (!points) {
-        const error = ctx.error(unit.id);
+        const error = unitError(unit);
         return error ? { status: "error", message: error } : { status: "loading" };
       }
       if (!points.length) return { status: "empty" };
@@ -180,6 +204,9 @@
       addStat(stats, unit.plural.charAt(0).toUpperCase() + unit.plural.slice(1), "pesos ÷ valor");
       side.appendChild(stats);
 
+      if (unit.cross) {
+        side.appendChild(el("p", "side-note", "Valor calculado con el dólar observado y la paridad de la moneda frente al dólar, porque el Banco Central publica este tipo de cambio redondeado a dos decimales."));
+      }
       if (p.d !== s.date) {
         side.appendChild(el("p", "side-note", freq === "M"
           ? `La ${unit.code} tiene un solo valor para todo el mes.`
@@ -242,6 +269,8 @@
         }
       } else {
         target.input.value = "";
+        // Aunque la unidad elegida aún no cargue, el monto en pesos sirve para las demás equivalencias.
+        if (s.edited === "pesos") pesos = value;
       }
       renderOthers(pesos);
     }

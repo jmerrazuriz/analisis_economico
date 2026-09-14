@@ -207,7 +207,7 @@
 
   function sectionIds(id) {
     const sec = SECTIONS.find((s) => s.id === id);
-    if (sec.type === "converter") return sec.units.map((u) => u.id);
+    if (sec.type === "converter") return sec.units.flatMap((u) => (u.cross ? [u.cross.dollar, u.cross.parity] : [u.id]));
     if (sec.type === "personal") {
       return personalItems().flatMap((item) => [...item.series.map((s) => s.id), ...(item.extras || []).map((x) => x.id)]);
     }

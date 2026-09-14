@@ -143,13 +143,6 @@
     deleteUser(me.id);
   }
 
-  // Contraseña olvidada: como no hay forma de recuperarla, solo se puede borrar la cuenta del dispositivo.
-  function forgetAccount(email) {
-    const user = users().find((u) => u.email === normalizeEmail(email));
-    if (!user) throw new AccountError("No hay ninguna cuenta con ese correo en este dispositivo.");
-    deleteUser(user.id);
-  }
-
   function selection() {
     const me = current();
     return me ? read(SELECTION_PREFIX + me.id, []) : [];
@@ -168,7 +161,6 @@
     current,
     changePassword,
     removeAccount,
-    forgetAccount,
     selection,
     saveSelection,
     AccountError,

@@ -126,5 +126,6 @@ def series_ids_from_indicators(paths=SERIES_FILES):
     ids = []
     for path in paths:
         if path.exists():
-            ids += re.findall(r'\bid"?\s*:\s*"([^"]+)"', path.read_text(encoding="utf-8"))
+            # Toma cualquier texto entre comillas con forma de código BDE (id, paridades del conversor, etc.).
+            ids += re.findall(r'"([A-Z][A-Z0-9]*(?:\.[A-Za-z0-9]+)+)"', path.read_text(encoding="utf-8"))
     return list(dict.fromkeys(i for i in ids if SERIES_ID.match(i)))
