@@ -43,6 +43,8 @@
     inflight: new Map(),
     cards: new Map(),
     converter: null,
+    personalItems: [],
+    lastPublic: null,
     configError: null,
     connectionError: null,
   };
@@ -206,6 +208,9 @@
   function sectionIds(id) {
     const sec = SECTIONS.find((s) => s.id === id);
     if (sec.type === "converter") return sec.units.map((u) => u.id);
+    if (sec.type === "personal") {
+      return personalItems().flatMap((item) => [...item.series.map((s) => s.id), ...(item.extras || []).map((x) => x.id)]);
+    }
     return sec.items.flatMap((item) => [...item.series.map((s) => s.id), ...(item.extras || []).map((x) => x.id)]);
   }
 
@@ -311,6 +316,7 @@
 
   function goSection(id, cardKey) {
     if (id !== state.section) {
+      if (currentSection().type !== "personal") state.lastPublic = state.section;
       state.section = id;
       save("section", id);
       if (location.hash.slice(1) !== id) history.replaceState(null, "", "#" + id);
@@ -334,12 +340,11 @@
       const button = el("button");
       button.type = "button";
       button.appendChild(el("span", "nav-label", IS_MOBILE ? sec.short || sec.name : sec.name));
-      if (sec.items) {
-        button.title = `${sec.name}: ${sec.items.length} gráficos`;
-        if (!IS_MOBILE) button.appendChild(el("span", "count", String(sec.items.length)));
-      } else {
-        button.title = sec.name;
-      }
+      const count = sec.items
+        ? sec.items.length
+        : sec.type === "personal" && Accounts.current() ? Accounts.selection().length : null;
+      button.title = count === null ? sec.name : `${sec.name}: ${count} gráficos`;
+      if (!IS_MOBILE && count !== null) button.appendChild(el("span", "count", String(count)));
       if (sec.id === state.section) button.setAttribute("aria-current", "page");
       button.addEventListener("click", () => goSection(sec.id));
       nav.appendChild(button);
@@ -436,6 +441,12 @@
     cards.textContent = "";
     state.cards.clear();
     state.converter = null;
+    state.personalItems = [];
+
+    if (sec.type === "personal") {
+      renderPersonal(cards);
+      return;
+    }
 
     if (sec.type === "converter") {
       state.converter = Converter.mount(cards, {
@@ -453,6 +464,146 @@
     updateCards();
   }
 
+  /* ---------- Personalizado y cuenta local ---------- */
+
+  const USER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+
+  function panelItem(key) {
+    for (const sec of SECTIONS) {
+      const item = sec.items && sec.items.find((i) => i.key === key);
+      if (item) return item;
+    }
+    return null;
+  }
+
+  function catalogEntry(id) {
+    for (const group of window.CATALOG || []) {
+      const serie = group.series.find((x) => x.id === id);
+      if (serie) return serie;
+    }
+    return null;
+  }
+
+  // Convierte una serie del catálogo en un indicador con el mismo formato que los del panel.
+  function catalogItem(entry, view) {
+    const yoy = view === "yoy" && !entry.id.endsWith(".D");
+    return {
+      key: `serie-${entry.id.replace(/[^A-Za-z0-9]/g, "-")}${yoy ? "-yoy" : ""}`,
+      name: yoy ? `${entry.name}, variación anual` : entry.name,
+      desc: entry.title,
+      series: [{ id: entry.id, label: entry.name }],
+      kind: yoy ? "bars" : "line",
+      transform: yoy ? "yoy" : undefined,
+      prefix: yoy ? undefined : entry.prefix,
+      suffix: yoy ? "%" : entry.suffix,
+      decimals: yoy ? 1 : entry.decimals === "auto" ? 2 : entry.decimals,
+      autoDecimals: !yoy && entry.decimals === "auto",
+      unit: yoy ? "variación anual" : entry.unit,
+      change: yoy ? "pp" : entry.change,
+      goodUp: null,
+    };
+  }
+
+  function personalItems() {
+    if (!window.Accounts || !Accounts.current()) return [];
+    return Accounts.selection().map((selected) => {
+      if (selected.type === "panel") return panelItem(selected.key);
+      const entry = catalogEntry(selected.id);
+      return entry ? catalogItem(entry, selected.view) : null;
+    }).filter(Boolean);
+  }
+
+  function updateAccountButton() {
+    const button = $("account-button");
+    if (!button) return;
+    const user = Accounts.current();
+    button.textContent = "";
+    if (IS_MOBILE) {
+      if (user) {
+        const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+        button.appendChild(el("span", "account-initials", initials));
+      } else {
+        button.innerHTML = USER_ICON;
+      }
+      button.setAttribute("aria-label", user ? `Mi panel de ${user.name}` : "Iniciar sesión");
+    } else {
+      button.append(
+        el("span", "account-label", user ? user.name : "Iniciar sesión"),
+        el("span", "account-sub", user ? "Ver mi pestaña personalizada" : "Arma tu pestaña personalizada"),
+      );
+    }
+  }
+
+  function openLogin(mode) {
+    LoginView.open({
+      mode,
+      onSuccess: () => {
+        updateAccountButton();
+        renderNav();
+        if (currentSection().type !== "personal") {
+          goSection("personalizado");
+          return;
+        }
+        renderSection();
+        fetchSeries(sectionIds(state.section)).then(() => {
+          if (currentSection().type === "personal") { updateCards(); updateStatus(); }
+        });
+      },
+      onClose: () => {
+        if (currentSection().type === "personal" && !Accounts.current()) goSection(state.lastPublic || SECTIONS[0].id);
+      },
+    });
+  }
+
+  function renderPersonal(cards) {
+    const user = Accounts.current();
+    updateAccountButton();
+    if (!user) {
+      $("chart-controls").hidden = true;
+      const card = el("article", "card personal-locked");
+      const actions = el("div", "personal-actions");
+      const login = el("button", "btn btn-primary", "Iniciar sesión");
+      login.type = "button";
+      login.addEventListener("click", () => openLogin("login"));
+      const register = el("button", "btn", "Crear cuenta");
+      register.type = "button";
+      register.addEventListener("click", () => openLogin("register"));
+      actions.append(login, register);
+      card.append(
+        el("h2", null, "Arma tu propia pestaña"),
+        el("p", "card-desc", "Inicia sesión o crea una cuenta en este dispositivo para elegir los indicadores y series que quieres ver juntos."),
+        actions,
+      );
+      cards.appendChild(card);
+      openLogin("login");
+      return;
+    }
+
+    state.personalItems = personalItems();
+    $("chart-controls").hidden = state.personalItems.length === 0;
+    Personal.mount(cards, {
+      user,
+      selection: Accounts.selection(),
+      sections: SECTIONS.filter((sec) => sec.items),
+      catalog: window.CATALOG || [],
+      onSave: (selection) => {
+        Accounts.saveSelection(selection);
+        renderNav();
+        renderSection();
+        fetchSeries(sectionIds(state.section)).then(() => {
+          if (currentSection().type === "personal") { updateCards(); updateStatus(); }
+        });
+      },
+      onSignedOut: () => {
+        updateAccountButton();
+        renderNav();
+        goSection(state.lastPublic || SECTIONS[0].id);
+      },
+    });
+    state.personalItems.forEach((item) => cards.appendChild(buildCard(item)));
+    updateCards();
+  }
+
   function buildCard(item) {
     const info = EXPLANATIONS[item.key] || {};
     const card = el("article", "card");
@@ -460,7 +611,7 @@
 
     const main = el("div", "card-main");
     const head = el("header", "card-head");
-    head.append(el("h2", null, item.name), el("p", "card-desc", info.summary || ""));
+    head.append(el("h2", null, item.name), el("p", "card-desc", info.summary || item.desc || ""));
 
     const howPanel = el("div", "how");
     howPanel.id = "how-" + item.key;
@@ -569,9 +720,10 @@
       return;
     }
     const sec = currentSection();
-    if (!sec.items) return;
+    const items = sec.type === "personal" ? state.personalItems : sec.items;
+    if (!items) return;
     const colors = [cssVar("--series-1"), cssVar("--series-2"), cssVar("--series-3")];
-    sec.items.forEach((item) => fillCard(item, colors));
+    items.forEach((item) => fillCard(item, colors));
     updateTimestamp();
   }
 
@@ -596,6 +748,10 @@
       const all = seriesPoints(s.id, item.transform);
       return { ...s, color: colors[i], all, points: inRange(all, freqOf(s.id)) };
     });
+    if (item.autoDecimals) {
+      const last = full[0].all[full[0].all.length - 1];
+      if (last) item.decimals = Math.abs(last.v) >= 1 ? 2 : Math.abs(last.v) >= 0.1 ? 3 : 4;
+    }
 
     Plot.render(refs.plot, {
       kind: item.kind,
@@ -834,6 +990,14 @@
     });
     bindVersionSwitch();
     bindStickyStrip();
+    $("account-button").addEventListener("click", () => goSection("personalizado"));
+    updateAccountButton();
+    window.addEventListener("storage", (event) => {
+      if (!event.key || !event.key.startsWith("panel-macro:")) return;
+      updateAccountButton();
+      renderNav();
+      if (currentSection().type === "personal") renderSection();
+    });
 
     renderNav();
     renderRanges();

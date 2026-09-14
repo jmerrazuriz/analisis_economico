@@ -303,4 +303,11 @@ window.SECTIONS = [
       { id: "F072.CLP.MXN.N.O.D", group: "Monedas", code: "MXN", name: "Peso mexicano", plural: "pesos mexicanos", decimals: 2 },
     ],
   },
+  {
+    id: "personalizado",
+    type: "personal",
+    name: "Personalizado",
+    short: "Mi panel",
+    intro: "Tu propia pestaña con los indicadores y series que elijas, incluidas monedas, materias primas, bolsas y tasas que no aparecen en las otras secciones.",
+  },
 ];

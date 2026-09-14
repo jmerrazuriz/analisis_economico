@@ -129,3 +129,25 @@
 @media (min-width: 861px) {
   .strip { position: sticky; top: 0; z-index: 15; }
 }
+
+/* Botón de la cuenta local en la barra lateral */
+.account-button {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--band-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.account-button:hover { background: rgba(255, 255, 255, 0.1); }
+.account-button:focus-visible { outline: 2px solid #86b6ef; outline-offset: 2px; }
+.account-label { overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.account-sub { color: var(--band-ink-2); font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .editor-layout { grid-template-columns: 1fr; }
+}

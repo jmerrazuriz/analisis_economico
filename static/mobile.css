@@ -132,3 +132,47 @@ details.data summary { padding: 8px 0; }
 .amounts-eq { margin: -6px 0; }
 .card.converter-others { padding: 14px 16px 10px; }
 .others-list { grid-template-columns: 1fr; }
+
+/* Cuenta local: botón redondo en la barra superior */
+.appbar-actions { display: flex; flex: none; align-items: center; gap: 8px; }
+.account-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.account-button svg { width: 18px; height: 18px; }
+.account-button:focus-visible { outline: 2px solid #86b6ef; outline-offset: 2px; }
+
+/* Siete secciones en la barra inferior */
+.tabbar { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.tabbar button { padding: 6px 1px; font-size: 10.5px; }
+
+/* Personalizado en el teléfono */
+.input:not(.amount-input) { font-size: 16px; }
+.editor-layout { grid-template-columns: 1fr; }
+.editor-options { max-height: 380px; }
+.chosen-list { max-height: none; }
+.card.personal-bar, .card.personal-editor, .card.personal-empty, .card.personal-locked { padding: 16px; }
+.personal-actions .btn { min-height: 40px; }
+.editor-option { padding: 9px 2px; }
+
+/* Inicio de sesión en el teléfono: una sola columna, campos grandes y sin zoom al escribir */
+.auth-hero { padding: calc(56px + env(safe-area-inset-top)) 20px 22px; }
+.auth-back { top: calc(12px + env(safe-area-inset-top)); left: 10px; }
+.auth-hero-title { font-size: 26px; }
+.auth-hero-text { font-size: 14px; }
+.auth-panel { padding: 24px 20px calc(32px + env(safe-area-inset-bottom)); }
+.auth-input { height: 48px; font-size: 16px; }
+.auth-input.has-eye { padding-right: 54px; }
+.auth-eye { right: 2px; width: 44px; height: 44px; }
+.auth-submit { height: 50px; font-size: 16px; }
+.auth-link { padding: 6px 0; }
