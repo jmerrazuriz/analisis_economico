@@ -20,10 +20,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -33,16 +34,23 @@ jobs:
           BCCH_PASS: ${{ secrets.BCCH_PASS }}
         run: python actualizar_datos.py --salida static/data
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: static
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        # La publicación falla de vez en cuando por el lado de GitHub; se reintenta una vez.
+        continue-on-error: true
+
+      - name: Reintentar la publicación
+        if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v5

@@ -62,7 +62,9 @@ GitHub Pages solo sirve archivos estáticos, y la clave de la API no puede queda
 4. Ve a **Settings → Pages** y en **Source** elige **GitHub Actions**.
 5. Ve a **Actions → Actualizar datos y publicar → Run workflow**.
 
-Los datos se actualizan solos cerca de las 8:00, 12:00 y 20:00 (hora de Chile) y en cada push a `main`. GitHub pausa las tareas programadas de repositorios sin actividad por 60 días; si pasa, basta con reactivarlas en la pestaña Actions.
+Los datos se actualizan solos cerca de las 8:00, 12:00 y 20:00 (hora de Chile) y en cada push a `main`.
+
+Si la API del Banco Central falla con alguna serie, el script reintenta cuatro veces y, si aun así no responde, reutiliza la copia ya publicada en el sitio: el indicador queda marcado como copia guardada en vez de perderse toda la actualización. La publicación solo se cancela si más del 20% de las series queda sin datos ni copia previa. GitHub pausa las tareas programadas de repositorios sin actividad por 60 días; si pasa, basta con reactivarlas en la pestaña Actions.
 
 ## Catálogo ampliado
 
