@@ -252,21 +252,42 @@
     }
   }
 
+  // Se descargan de a pocas y se reintenta: pedir ~160 archivos a la vez corta algunas conexiones.
+  const STATIC_WORKERS = 6;
+  const STATIC_ATTEMPTS = 3;
+
   async function requestStatic(ids) {
     const manifest = state.manifest;
-    await Promise.all(ids.map(async (id) => {
+    const pending = [...ids];
+    const version = manifest ? Math.round(manifest.generatedAt) : 0;
+
+    async function loadOne(id) {
       if (!manifest) {
         state.errors.set(id, state.connectionError);
         return;
       }
-      try {
-        const response = await fetch(`data/${id}.json?v=${Math.round(manifest.generatedAt)}`);
-        if (!response.ok) throw new Error((manifest.errors && manifest.errors[id]) || "Esta serie no está en la última publicación de datos.");
-        storeSeries(id, await response.json());
-      } catch (err) {
-        state.errors.set(id, err instanceof TypeError ? "No se pudo descargar la serie. Revisa tu conexión." : err.message);
+      for (let attempt = 1; attempt <= STATIC_ATTEMPTS; attempt++) {
+        try {
+          const response = await fetch(`data/${id}.json?v=${version}`);
+          if (!response.ok) throw new Error((manifest.errors && manifest.errors[id]) || "Esta serie no está en la última publicación de datos.");
+          storeSeries(id, await response.json());
+          return;
+        } catch (err) {
+          // TypeError es un corte de red; el resto (404, JSON inválido) no mejora reintentando.
+          const network = err instanceof TypeError;
+          if (!network || attempt === STATIC_ATTEMPTS) {
+            state.errors.set(id, network ? "No se pudo descargar la serie. Revisa tu conexión." : err.message);
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+        }
       }
-    }));
+    }
+
+    const workers = Array.from({ length: Math.min(STATIC_WORKERS, pending.length) }, async () => {
+      while (pending.length) await loadOne(pending.shift());
+    });
+    await Promise.all(workers);
   }
 
   async function requestApi(ids, refresh) {
